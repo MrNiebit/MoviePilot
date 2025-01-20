@@ -77,35 +77,8 @@ class ResourceHelper(metaclass=Singleton):
             # 需要安装
             need_updates[rname] = target
         if need_updates:
-            # 下载文件信息列表
-            r = RequestUtils(proxies=settings.PROXY, headers=settings.GITHUB_HEADERS,
-                             timeout=30).get_res(self._files_api)
-            if r and not r.ok:
-                return None, f"连接仓库失败：{r.status_code} - {r.reason}"
-            elif not r:
-                return None, "连接仓库失败"
-            files_info = r.json()
-            for item in files_info:
-                save_path = need_updates.get(item.get("name"))
-                if not save_path:
-                    continue
-                if item.get("download_url"):
-                    logger.info(f"开始更新资源文件：{item.get('name')} ...")
-                    download_url = f"{settings.GITHUB_PROXY}{item.get('download_url')}"
-                    # 下载资源文件
-                    res = RequestUtils(proxies=self.proxies, headers=settings.GITHUB_HEADERS,
-                                       timeout=180).get_res(download_url)
-                    if not res:
-                        logger.error(f"文件 {item.get('name')} 下载失败！")
-                    elif res.status_code != 200:
-                        logger.error(f"下载文件 {item.get('name')} 失败：{res.status_code} - {res.reason}")
-                    # 创建插件文件夹
-                    file_path = self._base_dir / save_path / item.get("name")
-                    if not file_path.parent.exists():
-                        file_path.parent.mkdir(parents=True, exist_ok=True)
-                    # 写入文件
-                    file_path.write_bytes(res.content)
-            logger.info("资源包更新完成，开始重启服务...")
-            SystemUtils.restart()
+            logger.info("发现可用的资源包更新，但已禁用自动下载功能")
+            for rname in need_updates.keys():
+                logger.info(f"资源包 {rname} 有可用更新，请手动更新")
         else:
             logger.info("所有资源已最新，无需更新")
